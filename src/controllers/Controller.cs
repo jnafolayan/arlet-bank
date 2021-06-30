@@ -8,7 +8,7 @@ namespace ArletBank
             Log = log;
         }
 
-        public void Run()
+        public virtual void Run()
         {}
 
         public IDatabase Database { get; protected set; } 
