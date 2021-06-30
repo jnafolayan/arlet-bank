@@ -15,6 +15,23 @@ namespace ArletBank
             Log.Info("====================================================");
 
             string userType = GetUserTypeFromArgs(args);
+            Controller controller;
+            if (userType == "admin") 
+            {
+                controller = new AdminController(Log);
+            }
+            else if (userType == "staff")
+            {
+                controller = new StaffController(Log);
+            }
+            else if (userType == "customer")
+            {
+                controller = new CustomerController(Log);
+            }
+            else
+            {
+                Log.Error($"A controller for a user '{userType}' does not exist");
+            }
             // var m = new InquirerCore.Prompts.ListInput("hello", "can i ask you", new string[]{"show"});
             // m.Ask();
         }
