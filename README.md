@@ -34,4 +34,4 @@ Run this module using:
 ```bash
 dotnet run customer
 ```
-Customers can register, change their PINs, withdraw, deposit, among other features. 
+Customers can register, change their PINs, withdraw, deposit, among other features.

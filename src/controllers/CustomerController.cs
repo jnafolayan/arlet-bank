@@ -37,6 +37,7 @@ namespace ArletBank
                 "Withdraw",
                 "Transfer",
                 "View transactions",
+                "Close account",
                 "Quit" 
             };
             bool abort = false;
@@ -62,6 +63,9 @@ namespace ArletBank
                         break;
                     case "View transactions":
                         RunViewTransactions(user);
+                        break;
+                    case "Close account":
+                        RunCloseAccount(user);
                         break;
                     case "Quit":
                     default:
@@ -95,6 +99,29 @@ namespace ArletBank
             foreach (Transaction trans in transactions)
             {
                 Log.Info($"\t[{trans.Date.ToString()}] {trans.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Prints a list of transactions involving the customer
+        /// </summary>
+        /// <param name="user">The customer entity</param>
+        public void RunCloseAccount(Customer user)
+        {
+            // fetch user account
+            var query = new Dictionary<string, object>();
+            query.Add("CustomerEmail", user.Email);
+
+            // delete account
+            bool deleteSuccess = Models.account.Remove(query);
+            if (deleteSuccess) 
+            {
+                Log.Success("Your account has been closed. We hate to see you go, but thank you for banking with us!");
+                Environment.Exit(0);
+            }
+            else
+            {
+                Log.Error("An error occured while closing your account.");
             }
         }
 
