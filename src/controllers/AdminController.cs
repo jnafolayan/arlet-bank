@@ -3,12 +3,13 @@ using System.Collections.Generic;
 
 namespace ArletBank
 {
+    /// <summary>
+    /// Controller for the admin module
+    /// </summary>
     public class AdminController : Controller
     {
         public AdminController(IDatabase db, Logger log, Models models) : base(db, log, models)
-        {
-            
-        }
+        {}
 
         public override void Run()
         {
@@ -50,11 +51,13 @@ namespace ArletBank
                 Log.Info("");
             }
         }
-
+        
+        /// <summary>
+        /// Prints a list of all registered staffs
+        /// </summary>
         public void RunListStaffs()
         {
-            var query = new Dictionary<string, object>();
-            var list = Models.staff.FindAll(query);
+            var list = Models.staff.FindAll();
             if (list.Count == 0)
             {
                 Log.Info("There are no staffs.");
@@ -67,7 +70,10 @@ namespace ArletBank
                 Log.Info($"\t{record["FirstName"]} {record["LastName"]} ({record["Email"]})");
             }
         }
-
+        
+        /// <summary>
+        /// Prompts to remove a staff
+        /// </summary>
         public void RunRemoveStaff()
         {
             string email = Log.Question<string>("Enter staff email");
@@ -91,7 +97,10 @@ namespace ArletBank
                 }
             }
         }
-
+        
+        /// <summary>
+        /// Prompts to create a new staff account
+        /// </summary>
         public void RunCreateStaff()
         {
             Dictionary<string, object> staffDto = new Dictionary<string, object>();
@@ -139,6 +148,10 @@ namespace ArletBank
             Log.Info("");
         }
 
+        /// <summary>
+        /// Prompts to login as an admin
+        /// </summary>
+        /// <returns>The admin entity if successful</returns>
         public Admin Login()
         {
             // collect username and password

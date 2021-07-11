@@ -61,6 +61,21 @@ namespace ArletBank
             return records;
         }
 
+        /// <summary>
+        /// Returns all the records
+        /// </summary>
+        /// <returns>A list of the records.</returns>
+        public List<Dictionary<string, object>> FindAll()
+        {
+            var query = new Dictionary<string, object>();
+            return FindAll(query);
+        }
+
+        /// <summary>
+        /// Finds the first record that matches a query.
+        /// </summary>
+        /// <returns>The matching record.</returns>
+        /// <param name="query">The query in a key/value form.</param>
         public Dictionary<string, object> Find(Dictionary<string, object> query)
         {
             var col = Database.Collection(Collection);
@@ -80,16 +95,26 @@ namespace ArletBank
             return record;
         }
 
+        /// <summary>
+        /// Inserts a new record into the collection
+        /// </summary>
+        /// <param name="dto">The new record.</param>
         public void Insert(Dictionary<string, object> dto)
         {
             var col = Database.Collection(Collection);
             col.Add(dto);
             Database.Save();
         }
-        public bool Remove(Dictionary<string, object> dto)
+
+        /// <summary>
+        /// Removes the first record that matches the query.
+        /// </summary>
+        /// <returns>Whether the operation was successful or not.</returns>
+        /// <param name="query">The query in a key/value form.</param>
+        public bool Remove(Dictionary<string, object> query)
         {
             var col = Database.Collection(Collection);
-            var record = Find(dto);
+            var record = Find(query);
             if (record == null) 
             {
                 return false;
@@ -98,10 +123,17 @@ namespace ArletBank
             Database.Save();
             return result;
         }
-        public bool UpdateOne(Dictionary<string, object> dto, Dictionary<string, object> update)
+
+        /// <summary>
+        /// Updates the first record that matches the query.
+        /// </summary>
+        /// <returns>Whether the operation was successful or not.</returns>
+        /// <param name="query">The query in a key/value form.</param>
+        /// <param name="update">The patch object</param>
+        public bool UpdateOne(Dictionary<string, object> query, Dictionary<string, object> update)
         {
             var col = Database.Collection(Collection);
-            var record = Find(dto);
+            var record = Find(query);
             if (record == null) 
             {
                 return false;
@@ -113,6 +145,12 @@ namespace ArletBank
             Database.Save();
             return true;
         }
+
+        /// <summary>
+        /// Converts a dictionary to an instance of the entity this model wraps.
+        /// </summary>
+        /// <returns>An instance of the entity</returns>
+        /// <param name="dict">The dictionary.</param>
         public T FromDictionary(Dictionary<string, object> dict)
         {
             var t = new T();

@@ -4,13 +4,14 @@ using System.Collections.Generic;
 
 namespace ArletBank
 {
+    /// <summary>
+    /// Controller for the staff module
+    /// </summary>
     public class StaffController : Controller
     {
         public StaffController(IDatabase db, Logger log, Models models) : base(db, log, models)
-        {
-            
-        }
-
+        {}
+        
         public override void Run()
         {
             Greet();
@@ -52,6 +53,10 @@ namespace ArletBank
                 Log.Info("");
             }
         }
+
+        /// <summary>
+        /// Prints a list of customer registrations
+        /// </summary>
         public void RunViewRegistrations()
         {
             // fetch all unconfirmed customers
@@ -133,6 +138,11 @@ namespace ArletBank
                 }
             }
         }
+
+        /// <summary>
+        /// Generates a unique account number (10-digit number) for a newly approved customer.
+        /// </summary>
+        /// <returns>The account number</returns>
         private string GenerateUniqueAccountNumber()
         {
             Random random = new Random();
@@ -152,6 +162,10 @@ namespace ArletBank
             } while (!valid);
             return result.ToString();
         }
+        
+        /// <summary>
+        /// Prints a list of approved customers.
+        /// </summary>
         private void RunListCustomers()
         {
             // fetch all confirmed customers
@@ -185,6 +199,10 @@ namespace ArletBank
             Log.Info("");
         }
 
+        /// <summary>
+        /// Prompts to login as a staff
+        /// </summary>
+        /// <returns>A staff entity</returns>
         private Staff Login()
         {
             // collect username and password

@@ -6,9 +6,7 @@ namespace ArletBank
     public class CustomerController : Controller
     {
         public CustomerController(IDatabase db, Logger log, Models models) : base(db, log, models)
-        {
-            
-        }
+        {}
 
         public override void Run()
         {
@@ -73,6 +71,11 @@ namespace ArletBank
                 Log.Info("");
             }
         }
+        
+        /// <summary>
+        /// Prints a list of transactions involving the customer
+        /// </summary>
+        /// <param name="user">The customer entity</param>
         public void RunViewTransactions(Customer user)
         {
             // fetch user account
@@ -94,6 +97,11 @@ namespace ArletBank
                 Log.Info($"\t[{trans.Date.ToString()}] {trans.Message}");
             }
         }
+
+        /// <summary>
+        /// Prompts to transfer money from a customer to another
+        /// </summary>
+        /// <param name="user">The customer entity</param>
         public void RunTransfer(Customer user)
         {
             var query = new Dictionary<string, object>();
@@ -109,6 +117,14 @@ namespace ArletBank
             {
                 // collect reciepient
                 var recipientAccNo = Log.Question<string>("Enter recipient's account number");
+
+                // ensure it is not the same customer
+                if (recipientAccNo == account.Number)
+                {
+                    Log.Error("You cannot transfer money between the same accounts.");
+                    return;
+                }
+
                 var recipientQuery = new Dictionary<string, object>();
                 recipientQuery.Add("Number", recipientAccNo);
                 var recipientDoc = Models.account.Find(recipientQuery);
@@ -168,6 +184,11 @@ namespace ArletBank
                 Log.Error("You have an insufficient balance. Fund your account and try again.");
             }
         }
+
+        /// <summary>
+        /// Prompts to debit the customer's account.
+        /// </summary>
+        /// <param name="user">The customer entity</param>
         public void RunWithdraw(Customer user)
         {
             var query = new Dictionary<string, object>();
@@ -207,6 +228,11 @@ namespace ArletBank
                 Log.Error("You have an insufficient balance. Fund your account and try again.");
             }
         }
+
+        /// <summary>
+        /// Prints the balance of the customer's account
+        /// </summary>
+        /// <param name="user">The customer entity</param>
         public void RunViewBalance(Customer user)
         {
             var query = new Dictionary<string, object>();
@@ -214,6 +240,11 @@ namespace ArletBank
             var account = Models.account.FromDictionary(Models.account.Find(query));
             Log.Info($"\tYour account balance is ${account.Balance}");
         }
+
+        /// <summary>
+        /// Prompts to credit the customer's account
+        /// </summary>
+        /// <param name="user">The customer entity</param>
         public void RunDeposit(Customer user)
         {
             decimal amount = Log.Question<decimal>("Enter amount");
@@ -248,6 +279,11 @@ namespace ArletBank
                 Log.Error("We could not complete your deposit.");
             }
         }
+
+        /// <summary>
+        /// Prompts to change the customer's PIN
+        /// </summary>
+        /// <param name="user">The customer entity</param>
         public void RunChangePIN(Customer user)
         {
             var query = new Dictionary<string, object>();
@@ -320,6 +356,10 @@ namespace ArletBank
                 }
             }
         }
+
+        /// <summary>
+        /// Prompts to create a new customer
+        /// </summary>
         public void RunCreateAccountDialogue()
         {
             var customerDto = new Dictionary<string, object>();
@@ -357,30 +397,9 @@ namespace ArletBank
             Models.customer.Insert(customerDto);
             Log.Success("Your account was created successfully.");
         }
-        public void RunListCustomers()
-        {
-            // fetch all confirmed customers
-            var query = new Dictionary<string, object>();
-            query.Add("Confirmed", true);
-            var list = Models.customer.FindAll(query);
-            if (list.Count == 0)
-            {
-                Log.Info("There are no customers.");
-                return;
-            }
-            
-            Log.Info($"Here are all the {list.Count} customers of Arlet:");
-            foreach (Dictionary<string, object> record in list)
-            {   
-                query.Clear();
-                query.Add("CustomerEmail", record["Email"]);
-                var account = Models.account.Find(query);
-                Log.Info($"\t{record["FirstName"]} {record["LastName"]} ({account["Number"]} - {account["Balance"]})");
-            }
-        }
+        
         protected override void Greet()
         {
-
             Log.Info("====================================================");
             Log.Info("");
             Log.Info(" Welcome to Arlet's Customer module!");
@@ -389,6 +408,10 @@ namespace ArletBank
             Log.Info("");
         }
 
+        /// <summary>
+        /// Prints a list of transactions involving the customer
+        /// </summary>
+        /// <returns>The customer entity if successful</returns>
         public Customer Login()
         {
             // collect username and password
