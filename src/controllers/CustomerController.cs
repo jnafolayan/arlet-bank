@@ -108,6 +108,13 @@ namespace ArletBank
         /// <param name="user">The customer entity</param>
         public void RunCloseAccount(Customer user)
         {
+            bool sure = Log.Confirm("Are you sure you want to close your account?");
+            if (!sure)
+            {
+                Log.Info("Phew. Thank you for choosing to remain with us.");
+                return;
+            }
+
             // fetch user account
             var query = new Dictionary<string, object>();
             query.Add("CustomerEmail", user.Email);
