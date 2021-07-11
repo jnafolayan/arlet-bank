@@ -17,8 +17,7 @@ namespace ArletBank
         public void Load()
         {
             string textContent = File.ReadAllText(Filename, Encoding.UTF8);
-            Store = JsonConvert.DeserializeObject<Dictionary<string, object>>(textContent);
-            Console.WriteLine(textContent);
+            Store = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>(textContent);
         }
 
         public void Save()
@@ -33,19 +32,19 @@ namespace ArletBank
         /// </summary>
         /// <returns>The collection dictionary.</returns>
         /// <param name="name">The name of the collection</param>
-        public Dictionary<string, Dictionary<string, object>> Collection(string name)
+        public List<Dictionary<string, object>> Collection(string name)
         {
             if (!Store.ContainsKey(name))
             {
                 // create a new entry for it 
-                Store[name] = new Dictionary<string, Dictionary<string, object>>();
+                Store[name] = new List<Dictionary<string, object>>();
                 // save 
                 Save();
             }
-            return Store[name] as Dictionary<string, Dictionary<string, object>>;
+            return Store[name];
         }
 
         public string Filename { get; private set; }
-        public Dictionary<string, object> Store { get; private set; }
+        public Dictionary<string, List<Dictionary<string, object>>> Store { get; private set; }
     }
 }

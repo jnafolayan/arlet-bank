@@ -1,1 +1,40 @@
-{}
+{
+  "admins": [
+    {
+      "Username": "giovanni",
+      "Password": "$MYHASH$V1$10000$HRhv3yJyPx+h98rIGLvaj5xPko39Aja+6cFz9iadbUM+SYKd",
+      "Name": "Giovanni"
+    },
+    {
+      "Username": "",
+      "Password": "$MYHASH$V1$10000$zXxFisFSThY0Mm8d0esAM75drmZ9ug+W908Cf0O9ZrwdE8ky",
+      "Name": "Dummhy"
+    }
+  ],
+  "staffs": [
+    {
+      "Email": "jnafolayan@gmail.com",
+      "FirstName": "Jon",
+      "LastName": "Doe",
+      "Username": "jnafolayan@gmail.com",
+      "Password": "$MYHASH$V1$10000$/OFdbzhBde7nh2HY0HpJyPVu68odDEz93//0P/mKg8/OTtnL"
+    }
+  ],
+  "customers": [
+    {
+      "Email": "jnafolayan@gmail.com",
+      "FirstName": "Praise",
+      "LastName": "King",
+      "Confirmed": true,
+      "AccountNumber": "7720948478"
+    }
+  ],
+  "accounts": [
+    {
+      "CustomerEmail": "jnafolayan@gmail.com",
+      "Balance": 0,
+      "Number": "7720948478",
+      "PIN": "$MYHASH$V1$10000$WIRt9HZqSX2wotBAYYN1wbDT7HlXx8XUp7qdKLgL493yCXP/"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 using System;
+using Sharprompt;
 
 namespace ArletBank
 {
@@ -57,6 +58,40 @@ namespace ArletBank
                 Console.WriteLine($"{msg}");
                 Console.ResetColor();
             }
+        }
+
+        public void Success(string msg)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine(msg);
+            Console.ResetColor();
+        }
+
+        public T Question<T>(string question, T defaultValue) 
+        {
+            T answer = Prompt.Input<T>(question, defaultValue);
+            return answer;
+        }
+
+        public T Question<T>(string question) 
+        {
+            T answer = Prompt.Input<T>(question);
+            return answer;
+        }
+
+        public bool Confirm(string question)
+        {
+            return Prompt.Confirm(question);
+        }
+
+        public string Password(string question)
+        {
+            return Prompt.Password(question);
+        }
+
+        public string Select(string question, string[] options)
+        {
+            return Prompt.Select(question, options);
         }
 
         public Logger.Levels Level { get; private set; }
