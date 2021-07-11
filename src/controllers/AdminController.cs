@@ -26,7 +26,15 @@ namespace ArletBank
             Log.Success("Login successful!\n");
             Log.Info($"Welcome, {user.Name}.");
 
-            string[] actions = new string[] { "Create staff", "Remove staff", "List staffs", "Quit" };
+            string[] actions = new string[] { 
+                "Create staff", 
+                "Remove staff", 
+                "List staffs", 
+                "Create admin", 
+                "Remove admin", 
+                "List admins", 
+                "Quit" 
+            };
             bool abort = false;
             
             while (!abort)
@@ -41,6 +49,15 @@ namespace ArletBank
                         break;
                     case "List staffs":
                         RunListStaffs();
+                        break;
+                    case "Create admin":
+                        RunCreateAdmin();
+                        break;
+                    case "Remove admin":
+                        RunRemoveAdmin(user);
+                        break;
+                    case "List admins":
+                        RunListAdmins();
                         break;
                     // fallthrough
                     case "Quit":
@@ -197,6 +214,53 @@ namespace ArletBank
 
             Models.admin.Insert(adminDto);
             Log.Success("Admin account was created successfully.");
+        }
+
+        /// <summary>
+        /// Prompts to remove an admin
+        /// </summary>
+        public void RunRemoveAdmin(Admin currentAdmin)
+        {
+            string username = Log.Question<string>("Enter admin username");
+            // cannot delete current admin with current admin
+            if (username == currentAdmin.Username)
+            {
+                Log.Error("Cannot delete currently logged in account.");
+                return;
+            }
+
+            var query = new Dictionary<string, object>();
+            query.Add("Username", username);
+            var admin = Models.admin.Find(query);
+            if (admin == null)
+            {
+                Log.Error("We could not find an account with that username");
+            }
+            else
+            {
+                bool result = Models.admin.Remove(query);
+                if (result) 
+                {
+                    Log.Success($"Admin account with username '{username}' was deleted.");
+                }
+                else
+                {
+                    Log.Success("Admin account was not deleted.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Prints a list of all created admins
+        /// </summary>
+        public void RunListAdmins()
+        {
+            var list = Models.admin.FindAll();
+            Log.Info("Here are all the admins of Arlet:");
+            foreach (Dictionary<string, object> record in list)
+            {
+                Log.Info($"\t{record["Name"]} ({record["Username"]})");
+            }
         }
 
         protected override void Greet()
