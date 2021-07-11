@@ -42,7 +42,7 @@ namespace ArletBank
                 string action = Log.Select("What would you like to do", actions);
                 switch (action) {
                     case "Create staff":
-                        RunCreateStaff();
+                        RunCreateStaff(user);
                         break;
                     case "Remove staff":
                         RunRemoveStaff();
@@ -51,7 +51,7 @@ namespace ArletBank
                         RunListStaffs();
                         break;
                     case "Create admin":
-                        RunCreateAdmin();
+                        RunCreateAdmin(user);
                         break;
                     case "Remove admin":
                         RunRemoveAdmin(user);
@@ -118,7 +118,7 @@ namespace ArletBank
         /// <summary>
         /// Prompts to create a new staff account
         /// </summary>
-        public void RunCreateStaff()
+        public void RunCreateStaff(Admin currentAdmin)
         {
             Dictionary<string, object> staffDto = new Dictionary<string, object>();
             string email = ""; 
@@ -148,6 +148,7 @@ namespace ArletBank
             staffDto.Add("LastName", lastname);
             staffDto.Add("Username", email);
             staffDto.Add("Password", PasswordHasher.Hash(firstname));
+            staffDto.Add("CreatedBy", currentAdmin.Username);
 
             Models.staff.Insert(staffDto);
             Log.Success("Staff account was created successfully.");
@@ -156,7 +157,7 @@ namespace ArletBank
         /// <summary>
         /// Prompts to create a new admin account
         /// </summary>
-        public void RunCreateAdmin()
+        public void RunCreateAdmin(Admin currentAdmin)
         {
             Dictionary<string, object> adminDto = new Dictionary<string, object>();
             string username = ""; 
@@ -211,6 +212,7 @@ namespace ArletBank
             adminDto.Add("Name", name);
             adminDto.Add("Username", username);
             adminDto.Add("Password", PasswordHasher.Hash(password));
+            adminDto.Add("CreatedBy", currentAdmin.Username);
 
             Models.admin.Insert(adminDto);
             Log.Success("Admin account was created successfully.");

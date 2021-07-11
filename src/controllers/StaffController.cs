@@ -39,7 +39,7 @@ namespace ArletBank
                 string action = Log.Select("What would you like to do", actions);
                 switch (action) {
                     case "View registrations":
-                        RunViewRegistrations();
+                        RunViewRegistrations(user);
                         break;
                     case "List customers":
                         RunListCustomers();
@@ -57,7 +57,7 @@ namespace ArletBank
         /// <summary>
         /// Prints a list of customer registrations
         /// </summary>
-        public void RunViewRegistrations()
+        public void RunViewRegistrations(Staff user)
         {
             // fetch all unconfirmed customers
             var query = new Dictionary<string, object>();
@@ -100,8 +100,11 @@ namespace ArletBank
             {
                 query.Clear();
                 query.Add("Email", reg.Email);
+
                 var update = new Dictionary<string, object>();
                 update.Add("Confirmed", true);
+                update.Add("ConfirmedBy", user.Email);
+                
                 bool result = Models.customer.UpdateOne(query, update);
                 if (result)
                 {
