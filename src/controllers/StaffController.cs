@@ -9,7 +9,7 @@ namespace ArletBank
     /// </summary>
     public class StaffController : Controller
     {
-        public StaffController(IDatabase db, Logger log, Models models) : base(db, log, models)
+        public StaffController(IDatabase db, Logger log, Services services, Models models) : base(db, log, services, models)
         {}
         
         public override void Run()
@@ -62,7 +62,7 @@ namespace ArletBank
             // fetch all unconfirmed customers
             var query = new Dictionary<string, object>();
             query.Add("Confirmed", false);
-            var list = Models.customer.FindAll(query);
+            var list = Services.customer.GetCustomers(query);
             
             if (list.Count == 0)
             {
@@ -74,9 +74,9 @@ namespace ArletBank
             
             var options = new string[list.Count];
             uint i = 0;
-            foreach (Dictionary<string, object> record in list)
+            foreach (Customer customer in list)
             {   
-                options[i++] = $"{record["FirstName"]} {record["LastName"]} ({record["Email"]})";
+                options[i++] = $"{customer.FirstName} {customer.LastName} ({customer.Email})";
             }
 
             string row = Log.Select("Select one for approval or rejection", options);
@@ -90,7 +90,7 @@ namespace ArletBank
             }
 
             // display registration
-            var reg = Models.customer.FromDictionary(list[(int)rowIndex]);
+            var reg = list[(int)rowIndex];
             Log.Info("Displaying account information for selected customer:");
             Log.Info($"\tFirst name: {reg.FirstName}");
             Log.Info($"\tLast name: {reg.LastName}");
@@ -98,25 +98,14 @@ namespace ArletBank
             bool approve = Log.Confirm("Do you want to approve this?");
             if (approve)
             {
-                query.Clear();
-                query.Add("Email", reg.Email);
-
-                var update = new Dictionary<string, object>();
-                update.Add("Confirmed", true);
-                update.Add("ConfirmedBy", user.Email);
-                
-                bool result = Models.customer.UpdateOne(query, update);
+                bool result = Services.customer.ApproveCustomer(reg.Email, user.Email);
                 if (result)
                 {
                     // create an account for the user
-                    var accountDto = new Dictionary<string, object>();
-                    accountDto.Add("CustomerEmail", reg.Email);
-                    accountDto.Add("Balance", 0);
                     string accNo = GenerateUniqueAccountNumber();
-                    accountDto.Add("Number", accNo);
                     // default PIN is 0000
-                    accountDto.Add("PIN", PasswordHasher.Hash(Account.DEFAULT_PIN));
-                    Models.account.Insert(accountDto);
+                    string pin = Account.DEFAULT_PIN;
+                    Services.account.CreateAccount(reg.Email, accNo, pin);
 
                     Log.Success($"{reg.FullName}'s registration was approved.");
                     Log.Info($"Customer's account number is {accNo}.");
@@ -128,9 +117,7 @@ namespace ArletBank
             }
             else
             {
-                query.Clear();
-                query.Add("Email", reg.Email);
-                bool result = Models.customer.Remove(query);
+                bool result = Services.customer.RemoveCustomer(reg.Email);
                 if (result)
                 {
                     Log.Success($"{reg.FullName}'s registration was denied.");
@@ -174,7 +161,7 @@ namespace ArletBank
             // fetch all confirmed customers
             var query = new Dictionary<string, object>();
             query.Add("Confirmed", true);
-            var list = Models.customer.FindAll(query);
+            var list = Services.customer.GetCustomers(query);
             if (list.Count == 0)
             {
                 Log.Info("There are no customers.");
@@ -182,12 +169,10 @@ namespace ArletBank
             }
 
             Log.Info($"Here are all the {list.Count} customers of Arlet:");
-            foreach (Dictionary<string, object> record in list)
+            foreach (Customer customer in list)
             {   
-                query.Clear();
-                query.Add("CustomerEmail", record["Email"]);
-                var account = Models.account.Find(query);
-                Log.Info($"\t{record["FirstName"]} {record["LastName"]} ({account["Number"]} - {account["Balance"]})");
+                var account = Services.account.GetAccountByCustomerEmail(customer.Email);
+                Log.Info($"\t{customer.FirstName} {customer.LastName} ({account.Number} - {account.Balance})");
             }
         }
         protected override void Greet()
@@ -218,35 +203,19 @@ namespace ArletBank
                 string username = Log.Question<string>("Enter your username", "").Trim();
                 string password = Log.Password("Enter your password");
                 
-                Dictionary<string, object> query = new Dictionary<string, object>();
-                query.Add("Username", username);
-
-                var a = Models.staff.Find(query);
-                bool valid = false;
-
-                if (a != null) 
-                {
-                    string hashed = (string)a["Password"];
-                    if (PasswordHasher.Verify(password, (string)hashed)) 
-                    {
-                        valid = true;
-                    }
-                }
-
-                if (valid) 
-                {
-                    user = Models.staff.FromDictionary(a);
-                    break;
-                }
-                else
+                user = Services.staff.Login(username, password);
+                if (user == null) 
                 {
                     Log.Warn("Could not find a matching staff account. Please try again");
                     Log.Info("");
                     attempts++;
                 }
+                else
+                {
+                    break;
+                }
             }
 
-            if (user == null) return null;
             return user;
         }
     }

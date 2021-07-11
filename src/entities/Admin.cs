@@ -5,6 +5,6 @@ namespace ArletBank
         public string Username { get; set; }
         public string Password { get; set; }
         public string Name { get; set; }
-        public string CreateBy { get; set; }
+        public string CreatedBy { get; set; }
     }
 }

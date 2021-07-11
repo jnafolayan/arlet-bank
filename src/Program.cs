@@ -11,6 +11,15 @@ namespace ArletBank
         public Model<Account> account;
         public Model<Transaction> transaction;
     }
+
+    public class Services
+    {
+        public AdminService admin;
+        public StaffService staff;
+        public CustomerService customer;
+        public AccountService account;
+        public TransactionService transaction;
+    }
     
     class Program
     {
@@ -29,17 +38,24 @@ namespace ArletBank
             models.account = new Model<Account>(db, "accounts");
             models.transaction = new Model<Transaction>(db, "transactions");
 
+            var services = new Services();
+            services.admin = new AdminService(models.admin);
+            services.staff = new StaffService(models.staff);
+            services.customer = new CustomerService(models.customer);
+            services.account = new AccountService(models.account);
+            services.transaction = new TransactionService(models.transaction);
+
             if (userType == "admin") 
             {
-                controller = new AdminController(db, log, models);
+                controller = new AdminController(db, log, services, models);
             }
             else if (userType == "staff")
             {
-                controller = new StaffController(db, log, models);
+                controller = new StaffController(db, log, services, models);
             }
             else if (userType == "customer")
             {
-                controller = new CustomerController(db, log, models);
+                controller = new CustomerController(db, log, services, models);
             }
             else
             {

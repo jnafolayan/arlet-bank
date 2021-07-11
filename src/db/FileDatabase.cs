@@ -14,6 +14,12 @@ namespace ArletBank
             Store = null;
         }
 
+        public void Clear()
+        {
+            Store = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>("{}");
+            Save();
+        }
+
         /// <summary>
         /// Loads the store from disk
         /// </summary>

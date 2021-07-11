@@ -8,7 +8,7 @@ namespace ArletBank
     /// </summary>
     public class AdminController : Controller
     {
-        public AdminController(IDatabase db, Logger log, Models models) : base(db, log, models)
+        public AdminController(IDatabase db, Logger log, Services services, Models models) : base(db, log, services, models)
         {}
 
         public override void Run()
@@ -74,7 +74,7 @@ namespace ArletBank
         /// </summary>
         public void RunListStaffs()
         {
-            var list = Models.staff.FindAll();
+            var list = Services.staff.GetAllStaffs();
             if (list.Count == 0)
             {
                 Log.Info("There are no staffs.");
@@ -82,9 +82,9 @@ namespace ArletBank
             }
 
             Log.Info("Here are all the staffs of Arlet:");
-            foreach (Dictionary<string, object> record in list)
+            foreach (Staff staff in list)
             {
-                Log.Info($"\t{record["FirstName"]} {record["LastName"]} ({record["Email"]})");
+                Log.Info($"\t{staff.FirstName} {staff.LastName} ({staff.Email})");
             }
         }
         
@@ -94,16 +94,13 @@ namespace ArletBank
         public void RunRemoveStaff()
         {
             string email = Log.Question<string>("Enter staff email", "").Trim();
-            var query = new Dictionary<string, object>();
-            query.Add("Email", email);
-            var staff = Models.staff.Find(query);
-            if (staff == null)
+            if (!Services.staff.StaffExists(email))
             {
                 Log.Error("We could not find an account with that email");
             }
             else
             {
-                bool result = Models.staff.Remove(query);
+                bool result = Services.staff.RemoveStaff(email);
                 if (result) 
                 {
                     Log.Success($"Staff account with email '{email}' was deleted.");
@@ -120,17 +117,12 @@ namespace ArletBank
         /// </summary>
         public void RunCreateStaff(Admin currentAdmin)
         {
-            Dictionary<string, object> staffDto = new Dictionary<string, object>();
-            string email = ""; 
-
+            string email = "";
             while (true) 
             {
                 email = Log.Question<string>("Enter staff email", "").Trim();
                 // ensure the email is unique
-                var query = new Dictionary<string, object>();
-                query.Add("Email", email);
-                var existingStaff = Models.staff.Find(query);
-                if (existingStaff != null)
+                if (Services.staff.StaffExists(email))
                 {
                     Log.Warn("A staff already exists with that email.");
                 }
@@ -143,14 +135,9 @@ namespace ArletBank
             string firstname = Log.Question<string>("Enter staff first name", "").Trim();            
             string lastname = Log.Question<string>("Enter staff last name", "").Trim();            
             
-            staffDto.Add("Email", email);
-            staffDto.Add("FirstName", firstname);
-            staffDto.Add("LastName", lastname);
-            staffDto.Add("Username", email);
-            staffDto.Add("Password", PasswordHasher.Hash(firstname));
-            staffDto.Add("CreatedBy", currentAdmin.Username);
+            string password = firstname.ToLower();
+            Services.staff.CreateStaff(email, firstname, lastname, password, currentAdmin.Username);
 
-            Models.staff.Insert(staffDto);
             Log.Success("Staff account was created successfully.");
         }
         
@@ -159,35 +146,40 @@ namespace ArletBank
         /// </summary>
         public void RunCreateAdmin(Admin currentAdmin)
         {
-            Dictionary<string, object> adminDto = new Dictionary<string, object>();
             string username = ""; 
-
-            while (true) 
+            int attempts = 3;
+            bool valid = false;
+            
+            while (attempts-- > 0) 
             {
                 username = Log.Question<string>("Enter admin username", "").Trim();
                 // ensure the username is unique
-                var query = new Dictionary<string, object>();
-                query.Add("Username", username);
-                var existingAdmin = Models.admin.Find(query);
-                if (existingAdmin != null)
+                if (Services.admin.AdminExists(username))
                 {
                     Log.Warn("An admin already exists with that username.");
                 }
                 else
                 {
+                    valid = true;
                     break;
                 }
+            }
+
+            if (!valid)
+            {
+                Log.Error("You tried too many times. Please try again.");
+                return;
             }
 
             string name = Log.Question<string>("Enter admin's name", "").Trim();            
             string password = "";
             
-            int attempts = 3;
+            attempts = 3;
             while (attempts-- > 0) 
             {
                 password = Log.Password("Enter admin's password");
 
-                if (password.Length < 8) 
+                if (password.Length < 8)
                 {
                     Log.Warn("Password cannot contain less than 8 characters. Try again.");
                     continue;
@@ -209,12 +201,9 @@ namespace ArletBank
                 return;
             }
             
-            adminDto.Add("Name", name);
-            adminDto.Add("Username", username);
-            adminDto.Add("Password", PasswordHasher.Hash(password));
-            adminDto.Add("CreatedBy", currentAdmin.Username);
+            // hash password and create
+            Services.admin.CreateAdmin(username, password, name, currentAdmin.Username);
 
-            Models.admin.Insert(adminDto);
             Log.Success("Admin account was created successfully.");
         }
 
@@ -231,16 +220,13 @@ namespace ArletBank
                 return;
             }
 
-            var query = new Dictionary<string, object>();
-            query.Add("Username", username);
-            var admin = Models.admin.Find(query);
-            if (admin == null)
+            if (!Services.admin.AdminExists(username))
             {
                 Log.Error("We could not find an account with that username");
             }
             else
             {
-                bool result = Models.admin.Remove(query);
+                bool result = Services.admin.RemoveAdmin(username);
                 if (result) 
                 {
                     Log.Success($"Admin account with username '{username}' was deleted.");
@@ -257,11 +243,11 @@ namespace ArletBank
         /// </summary>
         public void RunListAdmins()
         {
-            var list = Models.admin.FindAll();
+            var admins = Services.admin.GetAllAdmins();
             Log.Info("Here are all the admins of Arlet:");
-            foreach (Dictionary<string, object> record in list)
+            foreach (Admin admin in admins)
             {
-                Log.Info($"\t{record["Name"]} ({record["Username"]})");
+                Log.Info($"\t{admin.Name} ({admin.Username})");
             }
         }
 
@@ -292,35 +278,20 @@ namespace ArletBank
                 string username = Log.Question<string>("Enter your username", "").Trim();
                 string password = Log.Password("Enter your password");
                 
-                Dictionary<string, object> query = new Dictionary<string, object>();
-                query.Add("Username", username);
+                admin = Services.admin.Login(username, password);
 
-                var a = Models.admin.Find(query);
-                bool valid = false;
-
-                if (a != null) 
-                {
-                    string hashed = (string)a["Password"];
-                    if (PasswordHasher.Verify(password, (string)hashed)) 
-                    {
-                        valid = true;
-                    }
-                }
-
-                if (valid) 
-                {
-                    admin = Models.admin.FromDictionary(a);
-                    break;
-                }
-                else
+                if (admin == null)
                 {
                     Log.Warn("Could not find a matching admin account. Please try again");
                     Log.Info("");
                     attempts++;
                 }
+                else
+                {
+                    break;
+                }
             }
 
-            if (admin == null) return null;
             return admin;
         }
     }

@@ -5,7 +5,7 @@ namespace ArletBank
 {
     public class CustomerController : Controller
     {
-        public CustomerController(IDatabase db, Logger log, Models models) : base(db, log, models)
+        public CustomerController(IDatabase db, Logger log, Services services, Models models) : base(db, log, services, models)
         {}
 
         public override void Run()
@@ -83,16 +83,12 @@ namespace ArletBank
         public void RunViewTransactions(Customer user)
         {
             // fetch user account
-            var query = new Dictionary<string, object>();
-            query.Add("CustomerEmail", user.Email);
-            var account = Models.account.FromDictionary(Models.account.Find(query));
+            var account = Services.account.GetAccountByCustomerEmail(user.Email);
 
             // fetch transactions
-            query.Clear();
+            var query = new Dictionary<string, object>();
             query.Add("Account", account.Number);
-            var transactions = Models.transaction
-                .FindAll(query)
-                .ConvertAll<Transaction>(Models.transaction.FromDictionary);
+            var transactions = Services.transaction.GetTransactions(query);
             // sort by date from most recent transaction to most stale
             transactions.Sort((Transaction a, Transaction b) => b.Date.CompareTo(a.Date));
 
@@ -115,19 +111,22 @@ namespace ArletBank
                 return;
             }
 
-            // fetch user account
+            // delete customer
             var query = new Dictionary<string, object>();
             query.Add("CustomerEmail", user.Email);
+            bool customerDeleted = Services.customer.RemoveCustomer(user.Email);
 
             // delete account
-            bool deleteSuccess = Models.account.Remove(query);
-            if (deleteSuccess) 
+            bool accountDeleted = Services.account.RemoveAccountByCustomerEmail(user.Email);
+
+            if (accountDeleted && customerDeleted) 
             {
                 Log.Success("Your account has been closed. We hate to see you go, but thank you for banking with us!");
                 Environment.Exit(0);
             }
             else
             {
+                // ideally, there should be a rollback, but...
                 Log.Error("An error occured while closing your account.");
             }
         }
@@ -138,10 +137,8 @@ namespace ArletBank
         /// <param name="user">The customer entity</param>
         public void RunTransfer(Customer user)
         {
-            var query = new Dictionary<string, object>();
-            query.Add("CustomerEmail", user.Email);
-            var account = Models.account.FromDictionary(Models.account.Find(query));
-
+            var account = Services.account.GetAccountByCustomerEmail(user.Email);
+            
             decimal amount = Log.Question<decimal>("Enter amount");
             if (amount <= 0)
             {
@@ -159,52 +156,32 @@ namespace ArletBank
                     return;
                 }
 
-                var recipientQuery = new Dictionary<string, object>();
-                recipientQuery.Add("Number", recipientAccNo);
-                var recipientDoc = Models.account.Find(recipientQuery);
-
-                if (recipientDoc == null)
+                var recipient = Services.account.GetAccountByAccountNumber(recipientAccNo);
+                if (recipient == null)
                 {
                     Log.Error("We could not find the receiving account.");
                     return;
                 }
 
-                // update the sender's account
-                var update = new Dictionary<string, object>();
-                update.Add("Balance", account.Balance - amount);
-                bool success = Models.account.UpdateOne(query, update);
+                bool success = Services.account.Transfer(user.AccountNumber, recipientAccNo, amount);
 
-                // update the receiver's account
-                var recipient = Models.account.FromDictionary(recipientDoc);
-                var update2 = new Dictionary<string, object>();
-                update2.Add("Balance", recipient.Balance + amount);
-                bool success2 = Models.account.UpdateOne(recipientQuery, update2);
-
-                if (success || success2)
+                if (success)
                 {
-                    if (success) 
-                    {
-                        // create a transaction record for the sender
-                        var transDto = new Dictionary<string, object>();
-                        transDto.Add("Account", account.Number);
-                        transDto.Add("Type", Transaction.Types.DEBIT);
-                        transDto.Add("Amount", amount);
-                        transDto.Add("Message", $"Sent ${amount} to {recipient.Number}");
-                        transDto.Add("Date", DateTime.UtcNow);
-                        Models.transaction.Insert(transDto);
-                    }
+                    // create a transaction record for the sender
+                    Services.transaction.CreateTransaction(
+                        account.Number,
+                        (int)Transaction.Types.DEBIT,
+                        amount,
+                        $"Sent ${amount} to {recipient.Number}"
+                    );
 
-                    if (success2)
-                    {
-                        // create a transaction record for the receiver
-                        var transDto = new Dictionary<string, object>();
-                        transDto.Add("Account", recipient.Number);
-                        transDto.Add("Type", Transaction.Types.CREDIT);
-                        transDto.Add("Amount", amount);
-                        transDto.Add("Message", $"Received ${amount} from {account.Number}");
-                        transDto.Add("Date", DateTime.UtcNow);
-                        Models.transaction.Insert(transDto);
-                    }
+                    // create a transaction record for the receiver
+                    Services.transaction.CreateTransaction(
+                        recipient.Number,
+                        (int)Transaction.Types.CREDIT,
+                        amount,
+                        $"Received ${amount} from {account.Number}"
+                    );
 
                     Log.Success($"You have successfully transferred ${amount} to {recipient.Number}.");
                 }
@@ -225,9 +202,7 @@ namespace ArletBank
         /// <param name="user">The customer entity</param>
         public void RunWithdraw(Customer user)
         {
-            var query = new Dictionary<string, object>();
-            query.Add("CustomerEmail", user.Email);
-            var account = Models.account.FromDictionary(Models.account.Find(query));
+            var account = Services.account.GetAccountByCustomerEmail(user.Email);
 
             decimal amount = Log.Question<decimal>("Enter amount");
             if (amount <= 0)
@@ -236,19 +211,16 @@ namespace ArletBank
             }
             else if (amount <= account.Balance)
             {
-                var update = new Dictionary<string, object>();
-                update.Add("Balance", account.Balance - amount);
-                bool success = Models.account.UpdateOne(query, update);
+                bool success = Services.account.Withdraw(user.AccountNumber, amount);
                 if (success)
                 {
                     // create a transaction record
-                    var transDto = new Dictionary<string, object>();
-                    transDto.Add("Account", account.Number);
-                    transDto.Add("Type", Transaction.Types.DEBIT);
-                    transDto.Add("Amount", amount);
-                    transDto.Add("Message", $"Withdrew ${amount}");
-                    transDto.Add("Date", DateTime.UtcNow);
-                    Models.transaction.Insert(transDto);
+                    Services.transaction.CreateTransaction(
+                        account.Number,
+                        (int)Transaction.Types.DEBIT,
+                        amount,
+                        $"Withdrew ${amount}"
+                    );
 
                     Log.Success($"You have successfully withdrawn ${amount}.");
                 }
@@ -269,9 +241,7 @@ namespace ArletBank
         /// <param name="user">The customer entity</param>
         public void RunViewBalance(Customer user)
         {
-            var query = new Dictionary<string, object>();
-            query.Add("CustomerEmail", user.Email);
-            var account = Models.account.FromDictionary(Models.account.Find(query));
+            var account = Services.account.GetAccountByCustomerEmail(user.Email);
             Log.Info($"\tYour account balance is ${account.Balance}");
         }
 
@@ -288,23 +258,17 @@ namespace ArletBank
                 return;
             }
             
-            var update = new Dictionary<string, object>();
-            var query = new Dictionary<string, object>();
-            query.Add("CustomerEmail", user.Email);
-
-            var account = Models.account.FromDictionary(Models.account.Find(query));
-            update.Add("Balance", account.Balance + amount);
-            bool success = Models.account.UpdateOne(query, update);
+            var account = Services.account.GetAccountByCustomerEmail(user.Email);
+            bool success = Services.account.Deposit(user.AccountNumber, amount);
             if (success)
             {
                 // create a transaction record
-                var transDto = new Dictionary<string, object>();
-                transDto.Add("Account", account.Number);
-                transDto.Add("Type", Transaction.Types.CREDIT);
-                transDto.Add("Amount", amount);
-                transDto.Add("Message", $"Received a deposit of ${amount}");
-                transDto.Add("Date", DateTime.UtcNow);
-                Models.transaction.Insert(transDto);
+                Services.transaction.CreateTransaction(
+                    account.Number,
+                    (int)Transaction.Types.CREDIT,
+                    amount,
+                    $"Received a deposit of ${amount}"
+                );
 
                 Log.Success($"Account deposit of ${amount} was completed.");
             }
@@ -320,16 +284,13 @@ namespace ArletBank
         /// <param name="user">The customer entity</param>
         public void RunChangePIN(Customer user)
         {
-            var query = new Dictionary<string, object>();
-            query.Add("CustomerEmail", user.Email);
-            var existingAccount = Models.account.Find(query);
-
+            var existingAccount = Services.account.GetAccountByCustomerEmail(user.Email);
 
             // it will always exist but this is for static checking
             if (existingAccount != null)
             {
                 string newPIN = "";
-                string hashed = (string)existingAccount["PIN"];
+                string hashed = existingAccount.PIN;
                 bool valid = false;
 
                 int attempts = 3;
@@ -371,9 +332,7 @@ namespace ArletBank
 
                 if (valid)
                 {
-                    var update = new Dictionary<string, object>();
-                    update.Add("PIN", PasswordHasher.Hash(newPIN));
-                    bool success = Models.account.UpdateOne(query, update);
+                    bool success = Services.account.ChangeAccountPIN(user.AccountNumber, newPIN);
                     if (success)
                     {
                         Log.Success("Your PIN was changed successfully.");
@@ -396,19 +355,14 @@ namespace ArletBank
         /// </summary>
         public void RunCreateAccountDialogue()
         {
-            var customerDto = new Dictionary<string, object>();
-            string email = "";
-
             Log.Info("Register an account with us. We would love to have you!");
-
+         
+            string email = "";
             while (true)
             {
                 email = Log.Question<string>("Enter your email");
                 // ensure the email is unique
-                var query = new Dictionary<string, object>();
-                query.Add("Email", email);
-                var existingCustomer = Models.customer.Find(query);
-                if (existingCustomer != null)
+                if (Services.customer.CustomerExists(email))
                 {
                     Log.Warn("An account already exists with that email.");
                 }
@@ -421,14 +375,7 @@ namespace ArletBank
             string firstname = Log.Question<string>("Enter your first name");            
             string lastname = Log.Question<string>("Enter your last name");            
             
-            customerDto.Add("Email", email);
-            customerDto.Add("FirstName", firstname);
-            customerDto.Add("LastName", lastname);
-            customerDto.Add("AccountNumber", "");
-            // unconfirmed at first
-            customerDto.Add("Confirmed", false);
-
-            Models.customer.Insert(customerDto);
+            Services.customer.CreateCustomer(email, firstname, lastname);
             Log.Success("Your account was created successfully.");
         }
         
@@ -456,43 +403,25 @@ namespace ArletBank
 
             Log.Info("Enter your account number and pin to continue");
 
-            while (attempts < maxAttemptsAllowed) 
+            while (attempts++ < maxAttemptsAllowed) 
             {
                 string accountNumber = Log.Question<string>("Enter your account number").Trim();
                 string pin = Log.Password("Enter your 4-digit pin").Trim();
                 
-                Dictionary<string, object> query = new Dictionary<string, object>();
-                query.Add("Number", accountNumber);
+                var account = Services.account.Login(accountNumber, pin);
 
-                var account = Models.account.Find(query);
-                bool valid = false;
-
-                if (account != null) 
-                {
-                    string hashed = (string)account["PIN"];
-                    if (PasswordHasher.Verify(pin, (string)hashed)) 
-                    {
-                        valid = true;
-                    }
-                }
-
-                if (valid && account != null)
-                {
-                    query.Clear();
-                    query.Add("AccountNumber", (string)account["Number"]);
-                    var record = Models.customer.Find(query);
-                    user = Models.customer.FromDictionary(record);
-                    break;
-                }
-                else
+                if (account == null)
                 {
                     Log.Warn("Could not find a matching account. Please try again");
                     Log.Info("");
-                    attempts++;
+                }
+                else
+                {
+                    user = Services.customer.GetCustomer(account.CustomerEmail);
+                    break;
                 }
             }
 
-            if (user == null) return null;
             return user;
         }
     }
