@@ -216,7 +216,7 @@ namespace ArletBank
             while (attempts < maxAttemptsAllowed) 
             {
                 string username = Log.Question<string>("Enter your username", "").Trim();
-                string password = Log.Password("Enter your password").Trim();
+                string password = Log.Password("Enter your password");
                 
                 Dictionary<string, object> query = new Dictionary<string, object>();
                 query.Add("Username", username);

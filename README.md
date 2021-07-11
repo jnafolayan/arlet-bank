@@ -1,6 +1,8 @@
 # Arlet Banking System
 
-This project is an implementation of a banking application using C#. Users of the system include Administrators, Staffs and Customers. These users also correspond to the 3 modules supported by the system (admin, staff, customer).
+This project is an implementation of a banking application using C#. Users of the system include Administrators, Staffs and Customers. These users also correspond to the 3 modules supported by the system (admin, staff, customer). 
+
+The system uses a local file for data persistence.
 
 ## Installation
 ### Prerequisites
@@ -8,6 +10,11 @@ This project was build using .NET Core 3.0
 
 ### Instructions
 Clone the repository into your local machine. 
+
+Copy the contents of `db.init.json` into `db.json`:
+```bash
+cp db.init.json db.json
+```
 
 Run this command in the root folder to start the application:
 ```bash

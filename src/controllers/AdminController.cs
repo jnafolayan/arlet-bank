@@ -93,7 +93,7 @@ namespace ArletBank
         /// </summary>
         public void RunRemoveStaff()
         {
-            string email = Log.Question<string>("Enter staff email");
+            string email = Log.Question<string>("Enter staff email", "").Trim();
             var query = new Dictionary<string, object>();
             query.Add("Email", email);
             var staff = Models.staff.Find(query);
@@ -125,7 +125,7 @@ namespace ArletBank
 
             while (true) 
             {
-                email = Log.Question<string>("Enter staff email");
+                email = Log.Question<string>("Enter staff email", "").Trim();
                 // ensure the email is unique
                 var query = new Dictionary<string, object>();
                 query.Add("Email", email);
@@ -140,8 +140,8 @@ namespace ArletBank
                 }
             }
 
-            string firstname = Log.Question<string>("Enter staff first name");            
-            string lastname = Log.Question<string>("Enter staff last name");            
+            string firstname = Log.Question<string>("Enter staff first name", "").Trim();            
+            string lastname = Log.Question<string>("Enter staff last name", "").Trim();            
             
             staffDto.Add("Email", email);
             staffDto.Add("FirstName", firstname);
@@ -164,7 +164,7 @@ namespace ArletBank
 
             while (true) 
             {
-                username = Log.Question<string>("Enter admin username");
+                username = Log.Question<string>("Enter admin username", "").Trim();
                 // ensure the username is unique
                 var query = new Dictionary<string, object>();
                 query.Add("Username", username);
@@ -179,7 +179,7 @@ namespace ArletBank
                 }
             }
 
-            string name = Log.Question<string>("Enter admin's name");            
+            string name = Log.Question<string>("Enter admin's name", "").Trim();            
             string password = "";
             
             int attempts = 3;
@@ -223,7 +223,7 @@ namespace ArletBank
         /// </summary>
         public void RunRemoveAdmin(Admin currentAdmin)
         {
-            string username = Log.Question<string>("Enter admin username");
+            string username = Log.Question<string>("Enter admin username", "").Trim();
             // cannot delete current admin with current admin
             if (username == currentAdmin.Username)
             {
@@ -291,7 +291,7 @@ namespace ArletBank
             while (attempts < maxAttemptsAllowed) 
             {
                 string username = Log.Question<string>("Enter your username", "").Trim();
-                string password = Log.Password("Enter your password").Trim();
+                string password = Log.Password("Enter your password");
                 
                 Dictionary<string, object> query = new Dictionary<string, object>();
                 query.Add("Username", username);
