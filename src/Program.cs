@@ -9,6 +9,7 @@ namespace ArletBank
         public Model<Staff> staff;
         public Model<Customer> customer;
         public Model<Account> account;
+        public Model<Transaction> transaction;
     }
     
     class Program
@@ -26,6 +27,7 @@ namespace ArletBank
             models.staff = new Model<Staff>(db, "staffs");
             models.customer = new Model<Customer>(db, "customers");
             models.account = new Model<Account>(db, "accounts");
+            models.transaction = new Model<Transaction>(db, "transaction");
 
             if (userType == "admin") 
             {

@@ -4,9 +4,7 @@ namespace ArletBank
 {
     public interface IDatabase
     {
-        void Save()
-        {
-        }
+        void Save();
         List<Dictionary<string, object>> Collection(string name);
     }
 }
