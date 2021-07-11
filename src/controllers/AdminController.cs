@@ -267,7 +267,6 @@ namespace ArletBank
 
         protected override void Greet()
         {
-
             Log.Info("====================================================");
             Log.Info("");
             Log.Info(" Welcome to Arlet's Admin module!");

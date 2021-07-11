@@ -19,8 +19,16 @@ namespace ArletBank
         /// </summary>
         public void Load()
         {
-            string textContent = File.ReadAllText(Filename, Encoding.UTF8);
-            Store = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>(textContent);
+            if (File.Exists(Filename)) 
+            {
+                string textContent = File.ReadAllText(Filename, Encoding.UTF8);
+                Store = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>(textContent);
+            }
+            else
+            {
+                Store = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>("{}");
+                Save();
+            }
         }
 
         /// <summary>
