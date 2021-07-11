@@ -135,6 +135,69 @@ namespace ArletBank
             Models.staff.Insert(staffDto);
             Log.Success("Staff account was created successfully.");
         }
+        
+        /// <summary>
+        /// Prompts to create a new admin account
+        /// </summary>
+        public void RunCreateAdmin()
+        {
+            Dictionary<string, object> adminDto = new Dictionary<string, object>();
+            string username = ""; 
+
+            while (true) 
+            {
+                username = Log.Question<string>("Enter admin username");
+                // ensure the username is unique
+                var query = new Dictionary<string, object>();
+                query.Add("Username", username);
+                var existingAdmin = Models.admin.Find(query);
+                if (existingAdmin != null)
+                {
+                    Log.Warn("An admin already exists with that username.");
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            string name = Log.Question<string>("Enter admin's name");            
+            string password = "";
+            
+            int attempts = 3;
+            while (attempts-- > 0) 
+            {
+                password = Log.Password("Enter admin's password");
+
+                if (password.Length < 8) 
+                {
+                    Log.Warn("Password cannot contain less than 8 characters. Try again.");
+                    continue;
+                }
+
+                string confirmPass = Log.Password("Confirm admin's password");            
+                if (password != confirmPass)
+                {
+                    Log.Warn("The passwords don't match. Try again.");
+                    continue;
+                }
+
+                break;
+            }
+
+            if (password == "")
+            {
+                Log.Error("You tried too many times. Please try again.");
+                return;
+            }
+            
+            adminDto.Add("Name", name);
+            adminDto.Add("Username", username);
+            adminDto.Add("Password", PasswordHasher.Hash(password));
+
+            Models.admin.Insert(adminDto);
+            Log.Success("Admin account was created successfully.");
+        }
 
         protected override void Greet()
         {

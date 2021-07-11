@@ -27,7 +27,7 @@ namespace ArletBank
             models.staff = new Model<Staff>(db, "staffs");
             models.customer = new Model<Customer>(db, "customers");
             models.account = new Model<Account>(db, "accounts");
-            models.transaction = new Model<Transaction>(db, "transaction");
+            models.transaction = new Model<Transaction>(db, "transactions");
 
             if (userType == "admin") 
             {

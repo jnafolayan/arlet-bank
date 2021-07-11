@@ -15,11 +15,16 @@ namespace ArletBank
         public Logger() : this(Logger.Levels.DEBUG)
         {}
 
+        /// <param name="level">The logger level</param>
         public Logger(Logger.Levels level)
         {
             Level = level;
         }
 
+        /// <summary>
+        /// Debug log
+        /// </summary>
+        /// <param name="msg">The output string</param>
         public void Debug(string msg)
         {
             if (Level >= Logger.Levels.DEBUG)
@@ -30,6 +35,10 @@ namespace ArletBank
             }
         }
 
+        /// <summary>
+        /// Info log
+        /// </summary>
+        /// <param name="msg">The output string</param>
         public void Info(string msg)
         {
             if (Level >= Logger.Levels.INFO)
@@ -40,6 +49,10 @@ namespace ArletBank
             }
         }
 
+        /// <summary>
+        /// Warn log
+        /// </summary>
+        /// <param name="msg">The output string</param>
         public void Warn(string msg)
         {
             if (Level >= Logger.Levels.WARN)
@@ -50,6 +63,10 @@ namespace ArletBank
             }
         }
 
+        /// <summary>
+        /// Error log
+        /// </summary>
+        /// <param name="msg">The output string</param>
         public void Error(string msg)
         {
             if (Level >= Logger.Levels.ERROR)
@@ -60,6 +77,10 @@ namespace ArletBank
             }
         }
 
+        /// <summary>
+        /// Success log
+        /// </summary>
+        /// <param name="msg">The output string</param>
         public void Success(string msg)
         {
             Console.ForegroundColor = ConsoleColor.DarkGreen;
@@ -67,18 +88,31 @@ namespace ArletBank
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Asks a question on the terminal and waits for input
+        /// </summary>
+        /// <param name="question">The question string</param>
+        /// <param name="defaultValue">The default answer</param>
         public T Question<T>(string question, T defaultValue) 
         {
             T answer = Prompt.Input<T>(question, defaultValue);
             return answer;
         }
 
+        /// <summary>
+        /// Asks a question on the terminal and waits for input
+        /// </summary>
+        /// <param name="question">The question string</param>
         public T Question<T>(string question) 
         {
             T answer = Prompt.Input<T>(question);
             return answer;
         }
 
+        /// <summary>
+        /// Asks a yes/no question on the terminal and waits for input
+        /// </summary>
+        /// <param name="question">The question string</param>
         public bool Confirm(string question)
         {
             return Prompt.Confirm(question);
@@ -89,6 +123,11 @@ namespace ArletBank
             return Prompt.Password(question);
         }
 
+        /// <summary>
+        /// Asks for a password and waits for input
+        /// </summary>
+        /// <param name="question">The question string</param>
+        /// <param name="options">A list of options for the user to pick from</param>
         public string Select(string question, string[] options)
         {
             return Prompt.Select(question, options);
