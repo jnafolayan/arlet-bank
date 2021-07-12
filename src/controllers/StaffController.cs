@@ -107,6 +107,11 @@ namespace ArletBank
                     string pin = Account.DEFAULT_PIN;
                     Services.account.CreateAccount(reg.Email, accNo, pin);
 
+                    // let the customer know of their account number
+                    var update = new Dictionary<string, object>();
+                    update.Add("AccountNumber", accNo);
+                    Services.customer.UpdateCustomer(reg.Email, update);
+
                     Log.Success($"{reg.FullName}'s registration was approved.");
                     Log.Info($"Customer's account number is {accNo}.");
                 }
@@ -172,7 +177,7 @@ namespace ArletBank
             foreach (Customer customer in list)
             {   
                 var account = Services.account.GetAccountByCustomerEmail(customer.Email);
-                Log.Info($"\t{customer.FirstName} {customer.LastName} ({account.Number} - {account.Balance})");
+                Log.Info($"\t{customer.FirstName} {customer.LastName} ({account.Number} - ${account.Balance})");
             }
         }
         protected override void Greet()

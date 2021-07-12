@@ -152,7 +152,7 @@ namespace ArletBank
                 // ensure it is not the same customer
                 if (recipientAccNo == account.Number)
                 {
-                    Log.Error("You cannot transfer money between the same accounts.");
+                    Log.Error("You cannot transfer funds between the same accounts.");
                     return;
                 }
 
@@ -187,7 +187,7 @@ namespace ArletBank
                 }
                 else
                 {
-                    Log.Error("An error occured while withdrawing.");
+                    Log.Error("An error occured while transferring funds.");
                 }
             }
             else
