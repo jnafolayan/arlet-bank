@@ -8,6 +8,9 @@ namespace ArletBank
         public CustomerController(IDatabase db, Logger log, Services services, Models models) : base(db, log, services, models)
         {}
 
+        /// <summary>
+        /// Executes this controller
+        /// </summary>
         public override void Run()
         {
             Greet();
@@ -80,7 +83,7 @@ namespace ArletBank
         /// Prints a list of transactions involving the customer
         /// </summary>
         /// <param name="user">The customer entity</param>
-        public void RunViewTransactions(Customer user)
+        private void RunViewTransactions(Customer user)
         {
             // fetch user account
             var account = Services.account.GetAccountByCustomerEmail(user.Email);
@@ -102,7 +105,7 @@ namespace ArletBank
         /// Prints a list of transactions involving the customer
         /// </summary>
         /// <param name="user">The customer entity</param>
-        public void RunCloseAccount(Customer user)
+        private void RunCloseAccount(Customer user)
         {
             bool sure = Log.Confirm("Are you sure you want to close your account?");
             if (!sure)
@@ -135,7 +138,7 @@ namespace ArletBank
         /// Prompts to transfer money from a customer to another
         /// </summary>
         /// <param name="user">The customer entity</param>
-        public void RunTransfer(Customer user)
+        private void RunTransfer(Customer user)
         {
             var account = Services.account.GetAccountByCustomerEmail(user.Email);
             
@@ -200,9 +203,11 @@ namespace ArletBank
         /// Prompts to debit the customer's account.
         /// </summary>
         /// <param name="user">The customer entity</param>
-        public void RunWithdraw(Customer user)
+        private void RunWithdraw(Customer user)
         {
             var account = Services.account.GetAccountByCustomerEmail(user.Email);
+            var typedAccount = Account.CreateInstanceForType((Account.Types)account.Type);
+            account.CopyTo((Account)typedAccount);
 
             decimal amount = Log.Question<decimal>("Enter amount");
             if (amount <= 0)
@@ -211,6 +216,16 @@ namespace ArletBank
             }
             else if (amount <= account.Balance)
             {
+                try 
+                {
+                    typedAccount.ValidateDebitConstraints(amount);
+                }
+                catch (AccountOperationException ex)
+                {
+                    Log.Error(ex.Message);
+                    return;
+                }
+                
                 bool success = Services.account.Withdraw(user.AccountNumber, amount);
                 if (success)
                 {
@@ -239,17 +254,37 @@ namespace ArletBank
         /// Prints the balance of the customer's account
         /// </summary>
         /// <param name="user">The customer entity</param>
-        public void RunViewBalance(Customer user)
+        private void RunViewBalance(Customer user)
         {
             var account = Services.account.GetAccountByCustomerEmail(user.Email);
+            var typedAccount = Account.CreateInstanceForType((Account.Types)account.Type);
             Log.Info($"\tYour account balance is ${account.Balance}");
+
+            string maxDeposit, maxWithdrawal, typeString;
+            switch ((Account.Types)account.Type)
+            {
+                case Account.Types.CURRENT_ACCOUNT:
+                    maxDeposit = "N/A";
+                    maxWithdrawal = "N/A";
+                    typeString = "Current Account";
+                    break;
+                case Account.Types.SAVINGS_ACCOUNT:
+                default:
+                    maxDeposit = "$"+SavingsAccount.MAX_DEPOSIT.ToString();
+                    maxWithdrawal = "$"+SavingsAccount.MAX_WITHDRAWAL.ToString();
+                    typeString = "Savings Account";
+                    break;
+            }
+            Log.Info($"\tYour account limits ({typeString}):");
+            Log.Info($"\t\t-Max deposit: {maxDeposit}");
+            Log.Info($"\t\t-Max withdrawal: {maxWithdrawal}");
         }
 
         /// <summary>
         /// Prompts to credit the customer's account
         /// </summary>
         /// <param name="user">The customer entity</param>
-        public void RunDeposit(Customer user)
+        private void RunDeposit(Customer user)
         {
             decimal amount = Log.Question<decimal>("Enter amount");
             if (amount <= 0)
@@ -259,6 +294,19 @@ namespace ArletBank
             }
             
             var account = Services.account.GetAccountByCustomerEmail(user.Email);
+            var typedAccount = Account.CreateInstanceForType((Account.Types)account.Type);
+            account.CopyTo((Account)typedAccount);
+
+            try
+            {
+                typedAccount.ValidateCreditConstraints(amount);
+            }
+            catch (AccountOperationException ex)
+            {
+                Log.Error(ex.Message);
+                return;
+            }
+
             bool success = Services.account.Deposit(user.AccountNumber, amount);
             if (success)
             {
@@ -276,13 +324,14 @@ namespace ArletBank
             {
                 Log.Error("We could not complete your deposit.");
             }
+  
         }
 
         /// <summary>
         /// Prompts to change the customer's PIN
         /// </summary>
         /// <param name="user">The customer entity</param>
-        public void RunChangePIN(Customer user)
+        private void RunChangePIN(Customer user)
         {
             var existingAccount = Services.account.GetAccountByCustomerEmail(user.Email);
 
@@ -353,10 +402,10 @@ namespace ArletBank
         /// <summary>
         /// Prompts to create a new customer
         /// </summary>
-        public void RunCreateAccountDialogue()
+        private void RunCreateAccountDialogue()
         {
             Log.Info("Register an account with us. We would love to have you!");
-         
+
             string email = "";
             while (true)
             {
@@ -373,12 +422,21 @@ namespace ArletBank
             }
 
             string firstname = Log.Question<string>("Enter your first name");            
-            string lastname = Log.Question<string>("Enter your last name");            
+            string lastname = Log.Question<string>("Enter your last name");     
+
+            string[] accountTypes = new string[]{ "Savings", "Current" };
+            string accountTypeString = Log.Select("Select an account type", accountTypes);
+            Account.Types accountType = Account.Types.UNDEFINED;
+            if (accountTypeString == "Savings") accountType = Account.Types.SAVINGS_ACCOUNT;
+            if (accountTypeString == "Current") accountType = Account.Types.CURRENT_ACCOUNT;
             
-            Services.customer.CreateCustomer(email, firstname, lastname);
+            Services.customer.CreateCustomer(email, firstname, lastname, accountType);
             Log.Success("Your account was created successfully.");
         }
         
+        /// <summary>
+        /// Prints a welcome message to the screen
+        /// </summary>
         protected override void Greet()
         {
             Log.Info("====================================================");
@@ -393,7 +451,7 @@ namespace ArletBank
         /// Prints a list of transactions involving the customer
         /// </summary>
         /// <returns>The customer entity if successful</returns>
-        public Customer Login()
+        private Customer Login()
         {
             // collect username and password
             uint maxAttemptsAllowed = 3;

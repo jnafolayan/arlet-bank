@@ -9,8 +9,9 @@ namespace ArletBank
     /// Model is an abstraction of an entity in the database. It contains
     /// useful methods to CRUD records
     /// </summary>
+    /// <typeparam name="T">The type this model serves as a wrapper for</typeparam>
     public class Model<T> where T : new()
-    {
+    {   
         /// <summary>
         /// Instantiates a new model, providing the db and collection is belongs to
         /// </summary>

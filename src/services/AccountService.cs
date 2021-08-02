@@ -31,13 +31,15 @@ namespace ArletBank
         /// <param name="email">Email of the customer</param>
         /// <param name="number">The account number</param>
         /// <param name="pin">The PIN</param>
-        public Account CreateAccount(string email, string number, string pin)
+        /// <param name="accountType">The account type</param>
+        public Account CreateAccount(string email, string number, string pin, Account.Types accountType)
         {
             var accountDto = new Dictionary<string, object>();
             accountDto.Add("CustomerEmail", email);
             accountDto.Add("Number", number);
             accountDto.Add("PIN", PasswordHasher.Hash(pin));
             accountDto.Add("Balance", 0);
+            accountDto.Add("Type", (int)accountType);
             Model.Insert(accountDto);
             return GetAccountByCustomerEmail(email);
         }

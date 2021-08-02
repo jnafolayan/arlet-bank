@@ -12,6 +12,9 @@ namespace ArletBank
         public StaffController(IDatabase db, Logger log, Services services, Models models) : base(db, log, services, models)
         {}
         
+        /// <summary>
+        /// Executes this controller
+        /// </summary>
         public override void Run()
         {
             Greet();
@@ -57,7 +60,7 @@ namespace ArletBank
         /// <summary>
         /// Prints a list of customer registrations
         /// </summary>
-        public void RunViewRegistrations(Staff user)
+        private void RunViewRegistrations(Staff user)
         {
             // fetch all unconfirmed customers
             var query = new Dictionary<string, object>();
@@ -95,6 +98,7 @@ namespace ArletBank
             Log.Info($"\tFirst name: {reg.FirstName}");
             Log.Info($"\tLast name: {reg.LastName}");
             Log.Info($"\tEmail: {reg.Email}");
+            Log.Info($"\tAccount type: {Account.ConvertTypeToString((Account.Types)reg.AccountType)}");
             bool approve = Log.Confirm("Do you want to approve this?");
             if (approve)
             {
@@ -105,7 +109,7 @@ namespace ArletBank
                     string accNo = GenerateUniqueAccountNumber();
                     // default PIN is 0000
                     string pin = Account.DEFAULT_PIN;
-                    Services.account.CreateAccount(reg.Email, accNo, pin);
+                    Services.account.CreateAccount(reg.Email, accNo, pin, (Account.Types)reg.AccountType);
 
                     // let the customer know of their account number
                     var update = new Dictionary<string, object>();
@@ -142,10 +146,12 @@ namespace ArletBank
         {
             Random random = new Random();
             StringBuilder result = new StringBuilder(10);
+            
             bool valid = false;
             do {
                 result.Clear();
-                for (int i = 0; i < 10; i++)
+                result.Append("02");
+                for (int i = 0; i < 8; i++)
                 {
                     int c = random.Next(0, 10);
                     result.Append(c);
@@ -180,6 +186,10 @@ namespace ArletBank
                 Log.Info($"\t{customer.FirstName} {customer.LastName} ({account.Number} - ${account.Balance})");
             }
         }
+
+        /// <summary>
+        /// Prints a welcome message to the screen
+        /// </summary>
         protected override void Greet()
         {
 

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ArletBank 
 {
     /// <summary>
-    /// Transaction service
+    /// Transaction service. Exposes methods to interact with the transaction model.
     /// </summary>
     public class TransactionService : Service<Transaction> {
         public TransactionService(Model<Transaction> model) : base(model)

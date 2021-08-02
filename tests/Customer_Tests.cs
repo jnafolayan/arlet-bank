@@ -106,10 +106,10 @@ namespace ArletTests
 
         public Account CreateTestAccount(TestItems items, string email, string accountNumber)
         {
-            var customer = items.customerService.CreateCustomer(email, "John", "Doe");
+            var customer = items.customerService.CreateCustomer(email, "John", "Doe", Account.Types.CURRENT_ACCOUNT);
             // approve registration and create account for login
             items.customerService.ApproveCustomer(customer.Email, "");
-            var account = items.accountService.CreateAccount(customer.Email, accountNumber, "0000");
+            var account = items.accountService.CreateAccount(customer.Email, accountNumber, "0000", Account.Types.CURRENT_ACCOUNT);
 
             return account;
         }

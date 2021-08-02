@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ArletBank 
 {
     /// <summary>
-    /// Customer service
+    /// Customer service. Exposes methods to interact with the Customer model.
     /// </summary>
     public class CustomerService : Service<Customer> {
         public CustomerService(Model<Customer> model) : base(model)
@@ -17,13 +17,15 @@ namespace ArletBank
         /// <param name="email">The email</param>
         /// <param name="firstname">The first name</param>
         /// <param name="lastname">The last name</param>
-        public Customer CreateCustomer(string email, string firstname, string lastname)
+        /// <param name="accountType">The type of account</param>
+        public Customer CreateCustomer(string email, string firstname, string lastname, Account.Types accountType)
         {
             var customerDto = new Dictionary<string, object>();
             customerDto.Add("Email", email);
             customerDto.Add("FirstName", firstname);
             customerDto.Add("LastName", lastname);
             customerDto.Add("AccountNumber", "");
+            customerDto.Add("AccountType", (int)accountType);
             // unconfirmed at first
             customerDto.Add("Confirmed", false);
             Model.Insert(customerDto);

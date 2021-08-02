@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace ArletBank 
 {
     /// <summary>
-    /// Staff service
+    /// Staff service. Exposes methods to interact with the staff model.
     /// </summary>
     public class StaffService : Service<Staff> {
         public StaffService(Model<Staff> model) : base(model)

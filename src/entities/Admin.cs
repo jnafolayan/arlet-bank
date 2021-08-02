@@ -1,5 +1,8 @@
 namespace ArletBank
 {
+    /// <summary>
+    /// Admin class.
+    /// </summary>
     public class Admin
     {
         public string Username { get; set; }

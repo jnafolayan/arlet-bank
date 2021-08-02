@@ -2,6 +2,9 @@ using System;
 
 namespace ArletBank
 {
+    /// <summary>
+    /// Transaction class. 
+    /// </summary>
     public class Transaction
     {
         public string Account { get; set; }

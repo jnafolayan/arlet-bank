@@ -1,4 +1,5 @@
 using Xunit;
+using ArletBank;
 using System.Collections.Generic;
 
 namespace ArletTests
@@ -22,7 +23,7 @@ namespace ArletTests
         {
             var items = TestItems.Prepare();
 
-            var customer = items.customerService.CreateCustomer("dek@gmail.com", "Random", "User");
+            var customer = items.customerService.CreateCustomer("dek@gmail.com", "Random", "User", Account.Types.CURRENT_ACCOUNT);
             bool success = items.customerService.ApproveCustomer(customer.Email, "");
 
             var q = new Dictionary<string, object>();
@@ -38,7 +39,7 @@ namespace ArletTests
         {
             var items = TestItems.Prepare();
 
-            var customer = items.customerService.CreateCustomer("dek@gmail.com", "Izuku", "Midoriya");
+            var customer = items.customerService.CreateCustomer("dek@gmail.com", "Izuku", "Midoriya", Account.Types.CURRENT_ACCOUNT);
             var previousCount = items.db.Collection("customers").Count;
 
             items.customerService.RemoveCustomer(customer.Email);
@@ -53,9 +54,9 @@ namespace ArletTests
         {
             var items = TestItems.Prepare();
 
-            items.customerService.CreateCustomer("dec1@gmail.com", "Doe", "Johndoea");
-            items.customerService.CreateCustomer("dec2@gmail.com", "Doe", "Johndoeb");
-            items.customerService.CreateCustomer("dec@gmail.com", "Doe", "Johndoec");
+            items.customerService.CreateCustomer("dec1@gmail.com", "Doe", "Johndoea", Account.Types.CURRENT_ACCOUNT);
+            items.customerService.CreateCustomer("dec2@gmail.com", "Doe", "Johndoeb", Account.Types.CURRENT_ACCOUNT);
+            items.customerService.CreateCustomer("dec@gmail.com", "Doe", "Johndoec", Account.Types.CURRENT_ACCOUNT);
 
             Assert.Equal<int>(3, items.db.Collection("customers").Count);
         }

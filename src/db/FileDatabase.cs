@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 
 namespace ArletBank
 {
+    /// <summary>
+    /// FileDatabase class. Wrapper around file storage.
+    /// </summary>
     public class FileDatabase : IDatabase
     {
         public FileDatabase(string filename)
@@ -14,6 +17,9 @@ namespace ArletBank
             Store = null;
         }
 
+        /// <summary>
+        /// Clears the content of the file store on disk and in-memory.
+        /// </summary>
         public void Clear()
         {
             Store = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>("{}");
@@ -63,7 +69,7 @@ namespace ArletBank
             }
             return Store[name];
         }
-
+    
         public string Filename { get; private set; }
         public Dictionary<string, List<Dictionary<string, object>>> Store { get; private set; }
     }

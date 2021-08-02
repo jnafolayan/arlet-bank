@@ -11,6 +11,9 @@ namespace ArletBank
         public AdminController(IDatabase db, Logger log, Services services, Models models) : base(db, log, services, models)
         {}
 
+        /// <summary>
+        /// Executes this controller
+        /// </summary>
         public override void Run()
         {
             Greet();
@@ -72,7 +75,7 @@ namespace ArletBank
         /// <summary>
         /// Prints a list of all registered staffs
         /// </summary>
-        public void RunListStaffs()
+        private void RunListStaffs()
         {
             var list = Services.staff.GetAllStaffs();
             if (list.Count == 0)
@@ -91,7 +94,7 @@ namespace ArletBank
         /// <summary>
         /// Prompts to remove a staff
         /// </summary>
-        public void RunRemoveStaff()
+        private void RunRemoveStaff()
         {
             string email = Log.Question<string>("Enter staff email", "").Trim();
             if (!Services.staff.StaffExists(email))
@@ -115,7 +118,7 @@ namespace ArletBank
         /// <summary>
         /// Prompts to create a new staff account
         /// </summary>
-        public void RunCreateStaff(Admin currentAdmin)
+        private void RunCreateStaff(Admin currentAdmin)
         {
             string email = "";
             while (true) 
@@ -144,7 +147,7 @@ namespace ArletBank
         /// <summary>
         /// Prompts to create a new admin account
         /// </summary>
-        public void RunCreateAdmin(Admin currentAdmin)
+        private void RunCreateAdmin(Admin currentAdmin)
         {
             string username = ""; 
             int attempts = 3;
@@ -210,7 +213,7 @@ namespace ArletBank
         /// <summary>
         /// Prompts to remove an admin
         /// </summary>
-        public void RunRemoveAdmin(Admin currentAdmin)
+        private void RunRemoveAdmin(Admin currentAdmin)
         {
             string username = Log.Question<string>("Enter admin username", "").Trim();
             // cannot delete current admin with current admin
@@ -241,7 +244,7 @@ namespace ArletBank
         /// <summary>
         /// Prints a list of all created admins
         /// </summary>
-        public void RunListAdmins()
+        private void RunListAdmins()
         {
             var admins = Services.admin.GetAllAdmins();
             Log.Info("Here are all the admins of Arlet:");
@@ -251,6 +254,9 @@ namespace ArletBank
             }
         }
 
+        /// <summary>
+        /// Prints a welcome message to the screen
+        /// </summary>
         protected override void Greet()
         {
             Log.Info("====================================================");
@@ -266,7 +272,7 @@ namespace ArletBank
         /// Prompts to login as an admin
         /// </summary>
         /// <returns>The admin entity if successful</returns>
-        public Admin Login()
+        private Admin Login()
         {
             // collect username and password
             uint maxAttemptsAllowed = 3;

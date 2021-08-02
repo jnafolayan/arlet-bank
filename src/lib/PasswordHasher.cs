@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 namespace ArletBank 
 {
     /// <summary>
+    /// Exposes methods around securely hashing strings.
     /// Credit: https://stackoverflow.com/a/32191537
     /// </summary>
     public class PasswordHasher
